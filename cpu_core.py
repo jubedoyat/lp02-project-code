@@ -7,14 +7,12 @@ def run_instructions(instrs, base=0x0):
     for i, instr in enumerate(instrs):
         mem.escribir(base + i, instr)
 
-    pc = base
-    cpu.pc = pc
+    cpu.PC = base
 
-    while True:
-        instr = mem.leer(cpu.pc)
-        if instr == "HALT":
-            break
+    while cpu.running:
+        instr = mem.leer(cpu.PC)
         cpu.ejecutar(instr, mem)
-        cpu.pc += 1
+        if cpu.running:
+            cpu.PC += 1
 
     return cpu, mem
