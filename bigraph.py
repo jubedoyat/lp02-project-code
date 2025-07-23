@@ -31,7 +31,7 @@ class Bigraph:
         self.nodes.append(node)
 
     def add_instruction(self, line):
-        if line and line.strip():  # ✨ Asegura que la instrucción no sea vacía
+        if line and line.strip():  #  Asegura que la instruccin no sea vaca
             self.instructions.append(line.strip())
 
     def add_link(self, link):
@@ -55,21 +55,21 @@ class BigraphCompiler:
         for node in self.bigraph.nodes:
             self.compile_node(node)
 
-        # ⚠️ Asegura que no haya líneas vacías antes de HALT
+        #  Asegura que no haya lneas vacas antes de HALT
         self.assembly_lines = [l for l in self.assembly_lines if l.strip()]
         self.assembly_lines.append("HALT")
         return self.assembly_lines
 
     def compile_node(self, node):
         if not node.name.strip():
-            return  # ⚠️ omitir nodos vacíos
+            return  #  omitir nodos vacos
 
         if node.name.startswith("decl_"):
             var = node.name[5:]
-            self.assembly_lines.append(f"; declaración de {var}")
+            self.assembly_lines.append(f"; declaracin de {var}")
         elif node.name.startswith("assign_"):
             var = node.name[7:]
-            self.assembly_lines.append(f"; asignación a {var}")
+            self.assembly_lines.append(f"; asignacin a {var}")
         elif node.name == "procers":
             self.compile_procers(node)
         elif node.name == "colectavgB":

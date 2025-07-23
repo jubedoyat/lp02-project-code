@@ -62,7 +62,7 @@ def preprocess_lines(lines):
 def assemble_lines(lines):
     lines = preprocess_lines(lines)
     for idx, ln in enumerate(lines, start=1):
-        print(f"💡 ensamblando línea: {ln}")
+        print(f" ensamblando lnea: {ln}")
 
     # Primera pasada: etiquetas
     labels = {}
@@ -74,7 +74,7 @@ def assemble_lines(lines):
         else:
             addr += 1
 
-    # Segunda pasada: generación de binario
+    # Segunda pasada: generacin de binario
     output = []
     for idx, ln in enumerate(lines, start=1):
         if re.match(r'^(\w+):$', ln):
@@ -123,13 +123,13 @@ def assemble_lines(lines):
                 raise ValueError(f"Unsupported operands for '{mnem}'")
 
             if len(bits) < 8:
-                raise ValueError(f"Instrucción inválida: '{ln}' genera solo {len(bits)} bits")
+                raise ValueError(f"Instruccin invlida: '{ln}' genera solo {len(bits)} bits")
             bin_instr = int(bits, 2)
             output.append(bin_instr)
         except Exception as e:
-            raise ValueError(f"❌ Error en línea {idx}: \"{ln}\" -> {e}")
+            raise ValueError(f" Error en lnea {idx}: \"{ln}\" -> {e}")
 
-    print("🧪 Instrucciones binarias generadas:", [(i, instr, f"{instr:b}", f"{instr.bit_length()} bits") for i, instr in enumerate(output, start=1)])
+    print(" Instrucciones binarias generadas:", [(i, instr, f"{instr:b}", f"{instr.bit_length()} bits") for i, instr in enumerate(output, start=1)])
     return output
 
 def assemble_file(path: str):

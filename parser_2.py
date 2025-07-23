@@ -4,7 +4,7 @@ from bigraph import Bigraph, Node
 
 # Utilidades para registros
 def _get_reg(var: str) -> int:
-    """Obtener el registro asociado a una variable, creándolo si es nuevo."""
+    """Obtener el registro asociado a una variable, crendolo si es nuevo."""
     if var not in symbol_table:
         symbol_table[var] = len(symbol_table)
     return symbol_table[var]
@@ -19,7 +19,7 @@ def _alloc_temp() -> int:
     return reg
 
 def _compile_expr(expr, target_reg: int) -> list[str]:
-    """Compilar una expresión recursivamente a instrucciones."""
+    """Compilar una expresin recursivamente a instrucciones."""
     if isinstance(expr, tuple):
         kind = expr[0]
         if kind == 'var':
@@ -37,14 +37,14 @@ def _compile_expr(expr, target_reg: int) -> list[str]:
             if isinstance(right, tuple) and right[0] == 'const':
                 m = {'+': 'ADDI', '-': 'SUBI', '*': 'MULI', '/': 'DIVI'}
                 if op not in m:
-                    raise NotImplementedError(f"Operación no soportada: {op}")
+                    raise NotImplementedError(f"Operacin no soportada: {op}")
                 code.append(f"{m[op]} R{target_reg}, {right[1]}")
             else:
                 tmp = _alloc_temp()
                 code += _compile_expr(right, tmp)
                 m = {'+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV'}
                 if op not in m:
-                    raise NotImplementedError(f"Operación no soportada: {op}")
+                    raise NotImplementedError(f"Operacin no soportada: {op}")
                 code.append(f"{m[op]} R{target_reg}, R{tmp}")
             return code
     # Fallback: cargar literal
@@ -61,7 +61,7 @@ precedence = (
 
 def p_program(p):
     'program : instruction_list'
-    print("✔ Programa completo.")
+    print(" Programa completo.")
     for instr in p[1]:
         if instr and isinstance(instr, str) and instr.strip() and not instr.strip().startswith(";"):
             global_bigraph.add_instruction(instr.strip())
@@ -96,10 +96,10 @@ def p_declaration(p):
     global_bigraph.add_node(node)
 
     if len(p) == 7:
-        print(f"📦 Declaración con valor: {var} = {p[5]}")
+        print(f" Declaracin con valor: {var} = {p[5]}")
         p[0] = _compile_expr(p[5], reg_id)
     else:
-        print(f"📦 Declaración sin valor: {var}")
+        print(f" Declaracin sin valor: {var}")
         p[0] = []
 
 def p_tipo(p):
@@ -117,7 +117,7 @@ def p_assignment(p):
     temp_count = 0
     var = p[1]
     val = p[3]
-    print(f"📝 Asignación: {var} = {val}")
+    print(f" Asignacin: {var} = {val}")
     reg_id = _get_reg(var)
     node = Node(f"assign_{var}")
     global_bigraph.add_node(node)
@@ -149,7 +149,7 @@ def p_expression_value(p):
 
 def p_control_flow(p):
     'control_flow : KEYWORD_WHILE_STRE LPAREN expression RPAREN LBRACE instruction_list RBRACE'
-    print("🔄 Estructura de control reconocida.")
+    print(" Estructura de control reconocida.")
     node = Node("while")
     global_bigraph.add_node(node)
     p[0] = []
@@ -157,14 +157,14 @@ def p_control_flow(p):
 def p_racha_process(p):
     '''racha_process : FUNC_PROCERS LPAREN IDENTIFIER RPAREN SEMICOLON
                      | FUNC_COLECTAVGB LPAREN IDENTIFIER RPAREN SEMICOLON'''
-    print(f"⚙️ Proceso de racha: {p[1]}")
+    print(f" Proceso de racha: {p[1]}")
     node = Node(p[1])
     global_bigraph.add_node(node)
     p[0] = [f"; llamada a {p[1]} con {p[3]}"]
 
 def p_function_call(p):
     'function_call : IDENTIFIER LPAREN RPAREN SEMICOLON'
-    print(f"📞 Llamada a función: {p[1]}")
+    print(f" Llamada a funcin: {p[1]}")
     p[0] = []
 
 def p_comment(p):
@@ -174,8 +174,8 @@ def p_comment(p):
 
 def p_error(p):
     if p:
-        print(f"❌ Error de sintaxis en '{p.value}' (línea {p.lineno})")
+        print(f" Error de sintaxis en '{p.value}' (lnea {p.lineno})")
     else:
-        print("❌ Error: fin inesperado del archivo.")
+        print(" Error: fin inesperado del archivo.")
 
 parser = yacc.yacc()
