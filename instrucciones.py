@@ -20,16 +20,16 @@ class CPU:
 
     def ejecutar(self, instruccion, memoria_externa=None):
         """
-        Ejecuta una instrucción de 64 bits en binario (int).
+        Ejecuta una instruccin de 64 bits en binario (int).
         """
-        # Si se provee una memoria externa (como en la simulación), se usa.
+        # Si se provee una memoria externa (como en la simulacin), se usa.
         if memoria_externa:
             self.mem = memoria_externa
 
         bit_length = instruccion.bit_length()
         if bit_length == 0:
             # Para instrucciones como NOP (0x00) cuyo bit_length es 0,
-            # consideramos un tamaño mínimo de 8 bits para evitar errores
+            # consideramos un tamao mnimo de 8 bits para evitar errores
             bit_length = 8
 
         self.instrucciones.ejecutar(instruccion, bit_length)
@@ -41,16 +41,16 @@ class Instrucciones:
         self.MASK46 = (1 << 46) - 1
 
     def to_signed(self, val: int, bits: int = 64) -> int:
-        """Interpreta val como signed two’s-complement de ‘bits’ bits."""
+        """Interpreta val como signed twos-complement de bits bits."""
         sign_bit = 1 << (bits - 1)
         return val - (1 << bits) if (val & sign_bit) else val
 
     def ejecutar(self, instr: int, bit_len: int):
         pos = bit_len
         if pos < 8:
-            raise ValueError(f"Instrucción demasiado corta ({pos} bits)")
+            raise ValueError(f"Instruccin demasiado corta ({pos} bits)")
 
-        # opcode: 8 bits más significativos
+        # opcode: 8 bits ms significativos
         opcode = instr >> (pos - 8)
 
         # NOP / HALT (simple-byte)
@@ -84,7 +84,7 @@ class Instrucciones:
                 else:
                     return self.store_indirect(r1, addr)
 
-        # Para STORE directo (modo=2 implícito para store)
+        # Para STORE directo (modo=2 implcito para store)
         if opcode == 0xC3:
             # 8 opcode +4 r1 +4 zeros =16 bits, resto=addr
             r1 = (instr >> (pos - 8 - 4)) & 0xF
@@ -93,10 +93,10 @@ class Instrucciones:
 
         # INC/DEC formato corto (14 bits)
         if opcode in (0x48, 0x49):
-            # Asegurémonos de tener al menos 14 bits
+            # Asegurmonos de tener al menos 14 bits
             if pos < 14:
-                raise ValueError(f"Instrucción demasiado corta para INC/DEC ({pos} bits)")
-            # Los 4 bits de r1 empiezan justo después del opcode:
+                raise ValueError(f"Instruccin demasiado corta para INC/DEC ({pos} bits)")
+            # Los 4 bits de r1 empiezan justo despus del opcode:
             # bits: [opcode(8)] [r1(4)] [--(2)]
             r1 = instr & 0xF
 
@@ -108,7 +108,7 @@ class Instrucciones:
         # Para LOAD directo o inmediato
         # requer al menos 18 bits: opcode+modo+ r1+ r2
         if pos < 18:
-            raise ValueError(f"Instrucción demasiado corta para LOAD/ALU ({pos} bits)")
+            raise ValueError(f"Instruccin demasiado corta para LOAD/ALU ({pos} bits)")
         shift = pos - 8
         modo = (instr >> (shift - 2)) & 0x3
         r1   = (instr >> (shift - 6)) & 0xF
@@ -130,14 +130,14 @@ class Instrucciones:
         match opcode:
             case 0xC2:             self.load(r1, r2, imm, modo)
             case 0xC3:             self.store(r1, imm)
-            # Aritmética / Comparación
+            # Aritmtica / Comparacin
             case 0x81:             self.add(r1, r2, imm, modo)
             case 0x82:             self.sub(r1, r2, imm, modo)
             case 0x83:             self.mul(r1, r2, imm, modo)
             case 0x84:             self.div(r1, r2, imm, modo)
             case 0x8A:             self.comp(r1, r2, imm, modo)
 
-            # Lógica de bits
+            # Lgica de bits
             case 0x11:  self.and_op(r1, r2, imm, modo)
             case 0x13:  self.or_op (r1, r2, imm, modo)
             case 0x12:  self.xor_op(r1, r2, imm, modo)
@@ -169,7 +169,7 @@ class Instrucciones:
             case 0xF1:  self.return_interrupt()
 
             case _:
-                print(f"Instrucción no implementada: {hex(opcode)}")
+                print(f"Instruccin no implementada: {hex(opcode)}")
                 self.cpu.running = False
 
     def nop(self):
@@ -191,20 +191,20 @@ class Instrucciones:
     def mul(self, r1, r2, k, modo): res=(self.cpu.reg[r1] * (self.cpu.reg[r2] if modo==0 else k))&0xFFFFFFFFFFFFFFFF; self.cpu.reg[r1]=res; self.set_flags(res)
     def div(self, r1, r2, k, modo):
         val=(self.cpu.reg[r2] if modo==0 else k)
-        if val==0: print("Error: División por cero"); self.cpu.running=False; return
+        if val==0: print("Error: Divisin por cero"); self.cpu.running=False; return
         res=(self.cpu.reg[r1]//val)&0xFFFFFFFFFFFFFFFF; self.cpu.reg[r1]=res; self.set_flags(res)
     def comp(self, r1, r2, k, modo):
-        # lee los valores “en crudo” de registro o inmediato
+        # lee los valores en crudo de registro o inmediato
         v1 = self.cpu.reg[r1]
         v2 = (self.cpu.reg[r2] if modo == 0 else k)
-        # conviértelos a signed de 64 bits:
+        # convirtelos a signed de 64 bits:
         s1 = self.to_signed(v1)
         s2 = self.to_signed(v2)
-        # ahora Z y N según signed
+        # ahora Z y N segn signed
         self.cpu.FLAGS['Z'] = 1 if (s1 == s2) else 0
         self.cpu.FLAGS['N'] = 1 if (s1 <  s2) else 0
 
-    # Lógica
+    # Lgica
     def and_op(self, r1, r2, k, modo): res=self.cpu.reg[r1]& (self.cpu.reg[r2] if modo==0 else k);self.cpu.reg[r1]=res;self.set_flags(res)
     def or_op (self, r1, r2, k, modo): res=self.cpu.reg[r1]| (self.cpu.reg[r2] if modo==0 else k);self.cpu.reg[r1]=res;self.set_flags(res)
     def xor_op(self, r1, r2, k, modo): res=self.cpu.reg[r1]^ (self.cpu.reg[r2] if modo==0 else k);self.cpu.reg[r1]=res;self.set_flags(res)
@@ -244,7 +244,7 @@ class Instrucciones:
         elif modo == 2:
             self.cpu.reg[r1] = self.cpu.mem.leer(k)
         else:
-            raise ValueError(f"Modo LOAD inválido: {modo}")
+            raise ValueError(f"Modo LOAD invlido: {modo}")
 
     def store_indirect(self, r1, addr):
         # self.cpu.mem.escribir(addr, self.cpu.reg[r1])

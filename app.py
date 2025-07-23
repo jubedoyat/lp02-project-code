@@ -7,7 +7,7 @@ class SimulatorGUI:
         self.root = root
         root.title("Simulador de CPU con Compilador")
 
-        # Configuración superior
+        # Configuracin superior
         config_frame = tk.Frame(root)
         config_frame.pack(padx=10, pady=5, fill="x")
 
@@ -19,17 +19,17 @@ class SimulatorGUI:
         self.mem_entry = tk.Entry(config_frame, width=20)
         self.mem_entry.grid(row=0, column=3, padx=5)
 
-        # Entrada de código fuente
-        instr_label = tk.Label(root, text="Código fuente (alto nivel, ensamblador o binario):")
+        # Entrada de cdigo fuente
+        instr_label = tk.Label(root, text="Cdigo fuente (alto nivel, ensamblador o binario):")
         instr_label.pack(anchor="w", padx=10)
         self.instr_text = scrolledtext.ScrolledText(root, width=90, height=15)
         self.instr_text.pack(padx=10, pady=5)
 
-        # Botón ejecutar
+        # Botn ejecutar
         run_btn = tk.Button(root, text="Compilar y Ejecutar", command=self.run)
         run_btn.pack(pady=5)
 
-        # Área de salida
+        # rea de salida
         output_label = tk.Label(root, text="Salida:")
         output_label.pack(anchor="w", padx=10)
         self.output_text = scrolledtext.ScrolledText(root, width=90, height=12, state="disabled")
@@ -83,7 +83,7 @@ class SimulatorGUI:
             self.output_text.insert(tk.END, output)
 
         except Exception as e:
-            self.output_text.insert(tk.END, f"❌ Error: {e}\n")
+            self.output_text.insert(tk.END, f" Error: {e}\n")
 
         self.output_text.configure(state="disabled")
 
