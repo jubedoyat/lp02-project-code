@@ -27,6 +27,11 @@ class CPU:
             self.mem = memoria_externa
 
         bit_length = instruccion.bit_length()
+        if bit_length == 0:
+            # Para instrucciones como NOP (0x00) cuyo bit_length es 0,
+            # consideramos un tamaño mínimo de 8 bits para evitar errores
+            bit_length = 8
+
         self.instrucciones.ejecutar(instruccion, bit_length)
 
 class Instrucciones:
