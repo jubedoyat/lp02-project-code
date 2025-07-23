@@ -56,8 +56,7 @@ symbol_table = {}
 
 precedence = (
     ('left', 'PLUS', 'MINUS'),
-    ('left', 'TIMES', 'DIVIDE', 'MOD'),
-    ('nonassoc', 'LT', 'GT', 'LE', 'GE', 'EQ', 'NE'),
+    ('left', 'TIMES', 'DIVIDE'),
 )
 
 def p_program(p):
