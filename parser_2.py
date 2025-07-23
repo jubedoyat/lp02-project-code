@@ -2,6 +2,54 @@ import ply.yacc as yacc
 from lexer_1 import tokens
 from bigraph import Bigraph, Node
 
+# Utilidades para registros
+def _get_reg(var: str) -> int:
+    """Obtener el registro asociado a una variable, creándolo si es nuevo."""
+    if var not in symbol_table:
+        symbol_table[var] = len(symbol_table)
+    return symbol_table[var]
+
+temp_count = 0
+
+def _alloc_temp() -> int:
+    """Asignar un registro temporal para expresiones."""
+    global temp_count
+    reg = len(symbol_table) + temp_count
+    temp_count += 1
+    return reg
+
+def _compile_expr(expr, target_reg: int) -> list[str]:
+    """Compilar una expresión recursivamente a instrucciones."""
+    if isinstance(expr, tuple):
+        kind = expr[0]
+        if kind == 'var':
+            src = _get_reg(expr[1])
+            if src != target_reg:
+                return [f"MOV R{target_reg}, R{src}"]
+            return []
+        if kind == 'const':
+            return [f"LOADK R{target_reg}, {expr[1]}"]
+        if kind == 'binop':
+            op = expr[1]
+            left, right = expr[2], expr[3]
+            code = _compile_expr(left, target_reg)
+            # Operando derecho
+            if isinstance(right, tuple) and right[0] == 'const':
+                m = {'+': 'ADDI', '-': 'SUBI', '*': 'MULI', '/': 'DIVI'}
+                if op not in m:
+                    raise NotImplementedError(f"Operación no soportada: {op}")
+                code.append(f"{m[op]} R{target_reg}, {right[1]}")
+            else:
+                tmp = _alloc_temp()
+                code += _compile_expr(right, tmp)
+                m = {'+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV'}
+                if op not in m:
+                    raise NotImplementedError(f"Operación no soportada: {op}")
+                code.append(f"{m[op]} R{target_reg}, R{tmp}")
+            return code
+    # Fallback: cargar literal
+    return [f"LOADK R{target_reg}, {expr}"]
+
 # Globales
 global_bigraph = Bigraph()
 symbol_table = {}
@@ -40,22 +88,19 @@ def p_instruction(p):
 def p_declaration(p):
     '''declaration : KEYWORD_STRE tipo IDENTIFIER EQUALS expression SEMICOLON
                    | KEYWORD_STRE tipo IDENTIFIER SEMICOLON'''
+    global temp_count
+    temp_count = 0
     var = p[3]
-    if var not in symbol_table:
-        reg_id = len(symbol_table)
-        symbol_table[var] = reg_id
-    else:
-        reg_id = symbol_table[var]
+    reg_id = _get_reg(var)
+
+    node = Node(f"decl_{var}")
+    global_bigraph.add_node(node)
 
     if len(p) == 7:
         print(f"📦 Declaración con valor: {var} = {p[5]}")
-        node = Node(f"decl_{var}")
-        global_bigraph.add_node(node)
-        p[0] = [f"LOADK R{reg_id}, {p[5]}"]
+        p[0] = _compile_expr(p[5], reg_id)
     else:
         print(f"📦 Declaración sin valor: {var}")
-        node = Node(f"decl_{var}")
-        global_bigraph.add_node(node)
         p[0] = []
 
 def p_tipo(p):
@@ -69,31 +114,22 @@ def p_tipo(p):
 
 def p_assignment(p):
     'assignment : IDENTIFIER EQUALS expression SEMICOLON'
+    global temp_count
+    temp_count = 0
     var = p[1]
     val = p[3]
     print(f"📝 Asignación: {var} = {val}")
-    if var not in symbol_table:
-        reg_id = len(symbol_table)
-        symbol_table[var] = reg_id
-    else:
-        reg_id = symbol_table[var]
+    reg_id = _get_reg(var)
     node = Node(f"assign_{var}")
     global_bigraph.add_node(node)
-    p[0] = [f"LOADK R{reg_id}, {val}"]
+    p[0] = _compile_expr(val, reg_id)
 
 def p_expression_binop(p):
     '''expression : expression PLUS expression
                   | expression MINUS expression
                   | expression TIMES expression
-                  | expression DIVIDE expression
-                  | expression MOD expression
-                  | expression EQ expression
-                  | expression NE expression
-                  | expression LT expression
-                  | expression GT expression
-                  | expression LE expression
-                  | expression GE expression'''
-    p[0] = f"({p[1]} {p[2]} {p[3]})"
+                  | expression DIVIDE expression'''
+    p[0] = ('binop', p[2], p[1], p[3])
 
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
@@ -106,7 +142,11 @@ def p_expression_value(p):
                   | BOOLEAN
                   | NULL
                   | IDENTIFIER'''
-    p[0] = str(p[1])
+    tok_type = p.slice[1].type
+    if tok_type == 'IDENTIFIER':
+        p[0] = ('var', p[1])
+    else:
+        p[0] = ('const', p[1])
 
 def p_control_flow(p):
     'control_flow : KEYWORD_WHILE_STRE LPAREN expression RPAREN LBRACE instruction_list RBRACE'
